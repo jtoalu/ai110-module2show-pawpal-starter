@@ -7,6 +7,8 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+My initial UML design separated pet-care data from scheduling logic. A **PetOwner** stores owner information and manages the owner’s pets, while a **Pet** stores details about an animal and its care needs. A **Service** represents the type of care requested, such as grooming or walking, and an **Appointment** connects a pet, service, date, and time. A **Scheduler** checks availability, applies priorities and preferences, and creates a schedule without overlapping appointments.
+
 **b. Design changes**
 
 - Did your design change during implementation?
