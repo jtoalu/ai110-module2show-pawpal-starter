@@ -14,6 +14,27 @@ My initial UML design separated pet-care data from scheduling logic. A **PetOwne
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
 
+Findings
+
+High: Task has no link to its Pet.
+Pet.tasks and Scheduler.tasks are separate lists, so the same task could be missing from one collection or appear inconsistently. Add a pet or pet_id field to Task, or make Scheduler the single source of truth. See pawpal_system.py.
+
+Medium: Pet has no relationship to Owner.
+Owner.pets tracks pets in one direction, but a Pet cannot identify its owner. This may make owner-specific task views difficult to implement. See pawpal_system.py and pawpal_system.py.
+
+High: scheduling data is too limited for conflict detection.
+Task.due_date is only a string, with no start time, duration, or recurring schedule. The scheduler therefore cannot reliably detect overlapping tasks or check availability. See pawpal_system.py.
+
+Medium: completion logic has unclear ownership.
+Task.complete() and Scheduler.mark_task_complete() may eventually implement the same behavior. Choose whether the task changes its own state or the scheduler coordinates that change. See pawpal_system.py and pawpal_system.py.
+
+Low: priority is an unrestricted string.
+Values such as "high", "High", and "urgent" could be treated inconsistently by prioritize_tasks(). An enum or validated set of priority values would make sorting more reliable.
+
+Assumption
+
+The file is intentionally a skeleton, so the empty methods are expected. The most important design decision before implementation is whether Scheduler.tasks or each Pet.tasks list should be the authoritative task collection.
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
