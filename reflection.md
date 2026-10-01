@@ -58,10 +58,14 @@ The file is intentionally a skeleton, so the empty methods are expected. The mos
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
+- I am amazed how AI (Copilot) can do a lot of things which I learned from my Object-Oriented Programming course/class in the past.
+
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+
+In some occassions, I allow the AI to write codes or comments into a file. I then review the new lines or comments and decide whether to keep or undo. 
 
 ---
 
