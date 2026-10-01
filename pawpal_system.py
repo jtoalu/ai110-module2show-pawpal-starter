@@ -4,22 +4,26 @@ from datetime import datetime, timedelta
 
 class Owner:
 	def __init__(self, owner_id, name, email):
+		"""Initialize an owner and an empty pet list."""
 		self.owner_id = owner_id
 		self.name = name
 		self.email = email
 		self.pets = []
 
 	def add_pet(self, pet):
+		"""Add a pet to this owner and assign its owner ID."""
 		if pet not in self.pets:
 			self.pets.append(pet)
 			pet.owner_id = self.owner_id
 
 	def remove_pet(self, pet):
+		"""Remove a pet from this owner and clear its owner ID."""
 		if pet in self.pets:
 			self.pets.remove(pet)
 			pet.owner_id = None
 
 	def view_tasks(self):
+		"""Return the tasks belonging to all of this owner's pets."""
 		return [task for pet in self.pets for task in pet.tasks]
 
 
@@ -34,16 +38,19 @@ class Pet:
 	tasks: list = field(default_factory=list)
 
 	def add_task(self, task):
+		"""Add a task to this pet and assign its pet ID."""
 		if task not in self.tasks:
 			self.tasks.append(task)
 			task.pet_id = self.pet_id
 
 	def remove_task(self, task):
+		"""Remove a task from this pet and clear its pet ID."""
 		if task in self.tasks:
 			self.tasks.remove(task)
 			task.pet_id = None
 
 	def get_tasks(self):
+		"""Return this pet's task list."""
 		return self.tasks
 
 
@@ -59,35 +66,43 @@ class Task:
 	pet_id: int | None = None
 
 	def complete(self):
+		"""Mark this task as completed."""
 		self.completed = True
 
 	def is_overdue(self):
+		"""Return whether this incomplete task is past its due date."""
 		return not self.completed and self.due_date < datetime.now()
 
 	def update_task(self):
+		"""Return this task after an update."""
 		return self
 
 
 class Scheduler:
 	def __init__(self):
+		"""Initialize an empty task scheduler."""
 		self.tasks = []
 
 	def schedule_task(self, task):
+		"""Add a task if it does not conflict with a scheduled task."""
 		if task not in self.tasks and not self._conflicts_with_existing(task):
 			self.tasks.append(task)
 		return task in self.tasks
 
 	def remove_task(self, task):
+		"""Remove a task from the schedule if it is present."""
 		if task in self.tasks:
 			self.tasks.remove(task)
 
 	def get_upcoming_tasks(self):
+		"""Return incomplete scheduled tasks ordered by due date."""
 		return sorted(
 			(task for task in self.tasks if not task.completed),
 			key=lambda task: task.due_date,
 		)
 
 	def prioritize_tasks(self):
+		"""Return scheduled tasks ordered by priority and due date."""
 		priority_order = {"high": 0, "medium": 1, "low": 2}
 		return sorted(
 			self.tasks,
@@ -95,10 +110,12 @@ class Scheduler:
 		)
 
 	def mark_task_complete(self, task):
+		"""Mark a scheduled task as complete."""
 		if task in self.tasks:
 			task.complete()
 
 	def _conflicts_with_existing(self, task):
+		"""Return whether the task overlaps an existing scheduled task."""
 		new_end = task.due_date + timedelta(minutes=task.duration_minutes)
 		for existing_task in self.tasks:
 			existing_end = existing_task.due_date + timedelta(
