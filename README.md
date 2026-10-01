@@ -93,7 +93,10 @@ Sample test output:
 
 Describe your app in numbered steps so a reader can follow along without watching a video:
 
-1. <!-- Describe this step -->
+1. The app will accept data of owner, pet, task, and display the schedule for today.
+
+![screenshot of creating owner, pet, task, and display the schedule for today](images/Screenshot%202026-09-30%20224507.png)
+
 2. <!-- Describe this step -->
 3. <!-- Describe this step -->
 4. <!-- Describe this step -->
