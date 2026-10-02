@@ -1,4 +1,6 @@
 import streamlit as st
+from datetime import datetime
+from pawpal_system import Owner, Pet, Task, Scheduler
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -43,6 +45,34 @@ owner_name = st.text_input("Owner name", value="Jordan")
 pet_name = st.text_input("Pet name", value="Mochi")
 species = st.selectbox("Species", ["dog", "cat", "other"])
 
+breed = st.text_input("Breed", value="Shiba Inu")
+age = st.number_input("Age", min_value=0, max_value=30, value=3)
+
+if "owner" not in st.session_state:
+    st.session_state.owner = Owner(owner_id=1, name=owner_name, email="owner@example.com")
+    st.session_state.pet = Pet(pet_id=1, name=pet_name, species=species, breed=breed, age=age, owner_id=1)
+    st.session_state.owner.add_pet(st.session_state.pet)
+
+if st.button("Add pet"):
+    st.session_state.pet = Pet(pet_id=1, 
+        name=pet_name, species=species, breed=breed, age=age, owner_id=1)
+    st.session_state.owner.add_pet(st.session_state.pet)
+    st.success(f"Added pet {pet_name} for owner {owner_name}.")
+
+if st.session_state.owner.pets:
+    st.write(f"Current pets for {owner_name}:")
+    st.table(
+        [
+            {
+                "Name": pet.name,
+                "Species": pet.species,
+                "Breed": pet.breed,
+                "Age": pet.age,
+            }
+            for pet in st.session_state.owner.pets
+        ]
+    )
+
 st.markdown("### Tasks")
 st.caption("Add a few tasks. In your final version, these should feed into your scheduler.")
 
@@ -57,9 +87,15 @@ with col2:
 with col3:
     priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
 
+due_date = st.date_input("Due date")
+due_time = st.time_input("Due time")
+
 if st.button("Add task"):
     st.session_state.tasks.append(
-        {"title": task_title, "duration_minutes": int(duration), "priority": priority}
+        {"title": task_title, 
+        "duration_minutes": int(duration), 
+        "priority": priority,
+        "due_date": datetime.combine(due_date, due_time)}
     )
 
 if st.session_state.tasks:
@@ -74,9 +110,41 @@ st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
 
 if st.button("Generate schedule"):
-    st.warning(
-        "Not implemented yet. Next step: create your scheduling logic (classes/functions) and call it here."
-    )
+    task_objects = [
+        Task(
+            task_id=i,
+            title=task["title"],
+            description="",
+            due_date=(datetime.fromisoformat(task["due_date"]) 
+                if isinstance(task["due_date"], str) 
+                else task["due_date"]),
+            priority=task["priority"],
+            duration_minutes=task["duration_minutes"],
+        )
+        for i, task in enumerate(st.session_state.tasks)
+    ]
+
+    scheduler = Scheduler()
+    for task in task_objects:
+        scheduler.schedule_task(task)
+
+    st.write("Scheduled tasks:")
+    scheduled_tasks = scheduler.get_upcoming_tasks()
+    if scheduled_tasks:
+        st.table(
+            [
+                {
+                    "Title": task.title,
+                    "Due Date": task.due_date,
+                    "Priority": task.priority,
+                    "Duration (minutes)": task.duration_minutes,
+                }
+                for task in scheduled_tasks
+            ]
+        )
+    else:
+        st.info("No tasks scheduled. Check for conflicts or add more tasks.")
+
     st.markdown(
         """
 Suggested approach:
