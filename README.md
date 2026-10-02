@@ -97,9 +97,18 @@ Describe your app in numbered steps so a reader can follow along without watchin
 
 ![screenshot of creating owner, pet, task, and display the schedule for today](images/Screenshot%202026-09-30%20224507.png)
 
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
+2. Here is the UI of creating a pet.
+
+![screenshot of creating a pet](images/Screenshot%202026-10-01%20231839.png)
+
+3. Here is the UI of creating a task.
+
+![screenshot of creating a task](images/Screenshot%202026-10-01%20231912.png)
+
+4. Here is the screenshot of generate a schedule.
+
+![screenshot of creating a schedule](images/Screenshot%202026-10-01%20231946.png)
+
 5. <!-- Add more steps as needed -->
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
