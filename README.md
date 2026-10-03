@@ -78,6 +78,8 @@ Sample test output:
 # Paste your pytest output here
 ```
 
+![screenshot of various tests](images/Screenshot%202026-10-02%20232518.png)
+
 ## 📐 Smarter Scheduling
 
 > Fill in once you've implemented scheduling logic.
