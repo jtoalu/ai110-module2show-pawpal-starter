@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-
+from collections.abc import Iterable
 
 class Owner:
 	def __init__(self, owner_id, name, email):
@@ -79,6 +79,9 @@ class Task:
 	def update_task(self):
 		"""Return this task after an update."""
 		return self
+
+def sort_tasks(tasks: Iterable[Task]) -> list[Task]:
+		return sorted(tasks, key=lambda task: (task.due_date, task.task_id))
 
 
 class Scheduler:
