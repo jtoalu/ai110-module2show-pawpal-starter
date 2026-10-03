@@ -84,10 +84,12 @@ Sample test output:
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
+| Overdue Tasks | scheduler.get_overdue_tasks() | e.g., tasks past deadline, and not completed yet |
+| Upcoming Tasks | scheduler.get_upcoming_tasks() | e.g., tasks are scheduled, and future deadline |
 | Task sorting | | e.g., by priority, duration |
 | Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Conflict handling |scheduler.schedule_task(), pet.add_task(), pet.remove_task() | e.g., overlapping time slots |
+| Recurring tasks |scheduler.schedule_task(), scheduler.mark_task_complete(), pet.add_task() | e.g., daily vs. weekly |
 
 ## 📸 Demo Walkthrough
 
