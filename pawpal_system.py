@@ -64,10 +64,13 @@ class Task:
 	duration_minutes: int = 30
 	completed: bool = False
 	pet_id: int | None = None
+	recurrence: str | None = None  # "daily", "weekly", or None
+	completed_at: datetime | None = None
 
-	def complete(self):
-		"""Mark this task as completed."""
+	def complete(self, completed_at: datetime | None = None):
+		"""Mark this task as completed and record when it was completed."""
 		self.completed = True
+		self.completed_at = completed_at or datetime.now()
 
 	def is_overdue(self):
 		"""Return whether this incomplete task is past its due date."""
@@ -84,10 +87,34 @@ class Scheduler:
 		self.tasks = []
 
 	def schedule_task(self, task):
-		"""Add a task if it does not conflict with a scheduled task."""
-		if task not in self.tasks and not self._conflicts_with_existing(task):
-			self.tasks.append(task)
-		return task in self.tasks
+		"""Add a task unless it conflicts; warn instead of raising an error."""
+		if task in self.tasks:
+			return True
+		
+		conflict = self._find_conflict(task)
+		if conflict is not None:
+			print(
+                f"Warning: {task.title!r} conflicts with "
+                f"{conflict.title!r}; task was not scheduled."
+            )
+			return False
+		self.tasks.append(task)
+		return True
+		
+	def _find_conflict(self, task):
+		"""Return an existing incomplete task that overlaps this task."""
+		new_end = task.due_date + timedelta(minutes=task.duration_minutes)
+		
+		for existing_task in self.tasks:
+			if existing_task.completed:
+				continue
+			existing_end = existing_task.due_date + timedelta(
+                minutes=existing_task.duration_minutes
+            )
+			if task.due_date < existing_end and existing_task.due_date < new_end:
+				return existing_task
+				
+			return None
 
 	def remove_task(self, task):
 		"""Remove a task from the schedule if it is present."""
@@ -97,8 +124,18 @@ class Scheduler:
 	def get_upcoming_tasks(self):
 		"""Return incomplete scheduled tasks ordered by due date."""
 		return sorted(
-			(task for task in self.tasks if not task.completed),
+			(task for task in self.tasks 
+				if not task.completed and task.due_date >= datetime.now()
+			),
 			key=lambda task: task.due_date,
+		)
+
+	def get_overdue_tasks(self):
+		"""Return incomplete scheduled tasks that are past their due date."""
+		now = datetime.now()
+		return sorted(
+			[task for task in self.tasks 
+				if task.is_overdue()], key=lambda task: task.due_date
 		)
 
 	def prioritize_tasks(self):
@@ -110,9 +147,41 @@ class Scheduler:
 		)
 
 	def mark_task_complete(self, task):
-		"""Mark a scheduled task as complete."""
-		if task in self.tasks:
+		"""Complete a task and schedule its next daily or weekly occurrence."""
+		if task not in self.tasks or task.completed:
+			return None
+			
+		recurrence = (task.recurrence or "").lower()
+		if recurrence not in {"daily", "weekly"}:
 			task.complete()
+			return None
+
+		completed_at = datetime.now()
+
+		if recurrence == "daily":
+			next_due_date = completed_at + timedelta(days=1)
+		else:  # weekly
+			next_due_date = task.due_date + timedelta(days=7)
+
+		next_task = Task(
+            task_id=max((item.task_id for item in self.tasks), default=0) + 1,
+            title=task.title,
+            description=task.description,
+            due_date=next_due_date,
+            priority=task.priority,
+            duration_minutes=task.duration_minutes,
+            pet_id=task.pet_id,
+            recurrence=recurrence,
+        )
+		
+		if not self.schedule_task(next_task):
+			raise ValueError(
+				f"Could not schedule the next occurrence of {task.title!r}: "
+				"it conflicts with another task."
+            )
+			
+		task.complete()
+		return next_task
 
 	def _conflicts_with_existing(self, task):
 		"""Return whether the task overlaps an existing scheduled task."""
