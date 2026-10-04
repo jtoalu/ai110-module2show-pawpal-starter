@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from collections.abc import Iterable
+import json
+from pathlib import Path
 
 class Owner:
 	def __init__(self, owner_id, name, email):
@@ -81,92 +83,176 @@ class Task:
 		return self
 
 def sort_tasks(tasks: Iterable[Task]) -> list[Task]:
-		return sorted(tasks, key=lambda task: (task.due_date, task.task_id))
+    return sorted(tasks, key=lambda task: (task.due_date, task.task_id))
 
 
 class Scheduler:
-	def __init__(self):
-		"""Initialize an empty task scheduler."""
-		self.tasks = []
+    def __init__(self):
+        """Initialize an empty task scheduler."""
+        self.tasks = []
 
-	def schedule_task(self, task):
-		"""Add a task unless it conflicts; warn instead of raising an error."""
-		if task in self.tasks:
-			return True
-		
-		conflict = self._find_conflict(task)
-		if conflict is not None:
-			print(
+    def save_to_json(self, pets, filename=None):
+        """Save pets and tasks to JSON."""
+        path = Path(filename) if filename else Path(__file__).with_name("data.json")
+
+        all_tasks = {task.task_id: task for task in self.tasks}
+        for pet in pets:
+            for task in pet.tasks:
+                all_tasks.setdefault(task.task_id, task)
+
+        data = {
+            "pets": [
+                {
+                    "pet_id": pet.pet_id,
+                    "name": pet.name,
+                    "species": pet.species,
+                    "breed": pet.breed,
+                    "age": pet.age,
+                    "owner_id": pet.owner_id,
+                }
+                for pet in pets
+            ],
+            "tasks": [],
+            "scheduled_task_ids": [task.task_id for task in self.tasks],
+            "pet_task_ids": {
+                str(pet.pet_id): sorted({
+                    task.task_id
+                    for task in all_tasks.values()
+                    if task.pet_id == pet.pet_id
+                } | {
+                    task.task_id
+                    for task in pet.tasks
+                })
+                for pet in pets
+            },
+        }
+
+        for task in all_tasks.values():
+            task_data = vars(task).copy()
+            task_data["due_date"] = task.due_date.isoformat()
+            task_data["completed_at"] = (
+                task.completed_at.isoformat() if task.completed_at else None
+            )
+            data["tasks"].append(task_data)
+
+        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+    def load_from_json(self, filename=None):
+        """Load pets and tasks from JSON and return the pets."""
+        path = Path(filename) if filename else Path(__file__).with_name("data.json")
+
+        if not path.exists():
+            self.tasks = []
+            return []
+
+        data = json.loads(path.read_text(encoding="utf-8"))
+        pets = [Pet(**pet_data) for pet_data in data["pets"]]
+
+        tasks_by_id = {}
+        for task_data in data["tasks"]:
+            task_data["due_date"] = datetime.fromisoformat(task_data["due_date"])
+            if task_data["completed_at"] is not None:
+                task_data["completed_at"] = datetime.fromisoformat(
+                    task_data["completed_at"]
+                )
+            task = Task(**task_data)
+            tasks_by_id[task.task_id] = task
+
+        self.tasks = [
+            tasks_by_id[task_id] for task_id in data["scheduled_task_ids"]
+        ]
+        saved_pet_task_ids = data.get("pet_task_ids", {})
+        for pet in pets:
+            task_ids = set(saved_pet_task_ids.get(str(pet.pet_id), []))
+            task_ids.update(
+                task.task_id
+                for task in tasks_by_id.values()
+                if task.pet_id == pet.pet_id
+            )
+            pet.tasks = [
+                tasks_by_id[task_id]
+                for task_id in sorted(task_ids)
+                if task_id in tasks_by_id
+            ]
+
+        return pets
+
+    def schedule_task(self, task):
+        """Add a task unless it conflicts; warn instead of raising an error."""
+        if task in self.tasks:
+            return True
+
+        conflict = self._find_conflict(task)
+        if conflict is not None:
+            print(
                 f"Warning: {task.title!r} conflicts with "
                 f"{conflict.title!r}; task was not scheduled."
             )
-			return False
-		self.tasks.append(task)
-		return True
-		
-	def _find_conflict(self, task):
-		"""Return an existing incomplete task that overlaps this task."""
-		new_end = task.due_date + timedelta(minutes=task.duration_minutes)
-		
-		for existing_task in self.tasks:
-			if existing_task.completed:
-				continue
-			existing_end = existing_task.due_date + timedelta(
+            return False
+        self.tasks.append(task)
+        return True
+
+    def _find_conflict(self, task):
+        """Return an existing incomplete task that overlaps this task."""
+        new_end = task.due_date + timedelta(minutes=task.duration_minutes)
+
+        for existing_task in self.tasks:
+            if existing_task.completed:
+                continue
+            existing_end = existing_task.due_date + timedelta(
                 minutes=existing_task.duration_minutes
             )
-			if task.due_date < existing_end and existing_task.due_date < new_end:
-				return existing_task
-				
-			return None
+            if task.due_date < existing_end and existing_task.due_date < new_end:
+                return existing_task
 
-	def remove_task(self, task):
-		"""Remove a task from the schedule if it is present."""
-		if task in self.tasks:
-			self.tasks.remove(task)
+        return None
 
-	def get_upcoming_tasks(self):
-		"""Return incomplete scheduled tasks ordered by due date."""
-		return sorted(
-			(task for task in self.tasks 
-				if not task.completed and task.due_date >= datetime.now()
-			),
-			key=lambda task: task.due_date,
-		)
+    def remove_task(self, task):
+        """Remove a task from the schedule if it is present."""
+        if task in self.tasks:
+            self.tasks.remove(task)
 
-	def get_overdue_tasks(self):
-		"""Return incomplete scheduled tasks that are past their due date."""
-		now = datetime.now()
-		return sorted(
-			[task for task in self.tasks 
-				if task.is_overdue()], key=lambda task: task.due_date
-		)
+    def get_upcoming_tasks(self):
+        """Return incomplete scheduled tasks ordered by due date."""
+        return sorted(
+            (task for task in self.tasks if not task.completed and task.due_date >= datetime.now()),
+            key=lambda task: task.due_date,
+        )
 
-	def prioritize_tasks(self):
-		"""Return scheduled tasks ordered by priority and due date."""
-		priority_order = {"high": 0, "medium": 1, "low": 2}
-		return sorted(
-			self.tasks,
-			key=lambda task: (priority_order.get(task.priority.lower(), 1), task.due_date),
-		)
+    def get_overdue_tasks(self):
+        """Return incomplete scheduled tasks that are past their due date."""
+        now = datetime.now()
+        return sorted(
+            [task for task in self.tasks if task.is_overdue()],
+            key=lambda task: task.due_date,
+        )
 
-	def mark_task_complete(self, task):
-		"""Complete a task and schedule its next daily or weekly occurrence."""
-		if task not in self.tasks or task.completed:
-			return None
-			
-		recurrence = (task.recurrence or "").lower()
-		if recurrence not in {"daily", "weekly"}:
-			task.complete()
-			return None
+    def prioritize_tasks(self):
+        """Return scheduled tasks ordered by priority and due date."""
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        return sorted(
+            self.tasks,
+            key=lambda task: (priority_order.get(task.priority.lower(), 1), task.due_date),
+        )
 
-		completed_at = datetime.now()
+    def mark_task_complete(self, task):
+        """Complete a task and schedule its next daily or weekly occurrence."""
+        if task not in self.tasks or task.completed:
+            return None
 
-		if recurrence == "daily":
-			next_due_date = completed_at + timedelta(days=1)
-		else:  # weekly
-			next_due_date = task.due_date + timedelta(days=7)
+        recurrence = (task.recurrence or "").lower()
+        if recurrence not in {"daily", "weekly"}:
+            task.complete()
+            return None
 
-		next_task = Task(
+        completed_at = datetime.now()
+
+        if recurrence == "daily":
+            next_due_date = completed_at + timedelta(days=1)
+        else:  # weekly
+            next_due_date = task.due_date + timedelta(days=7)
+
+        next_task = Task(
             task_id=max((item.task_id for item in self.tasks), default=0) + 1,
             title=task.title,
             description=task.description,
@@ -176,23 +262,23 @@ class Scheduler:
             pet_id=task.pet_id,
             recurrence=recurrence,
         )
-		
-		if not self.schedule_task(next_task):
-			raise ValueError(
-				f"Could not schedule the next occurrence of {task.title!r}: "
-				"it conflicts with another task."
-            )
-			
-		task.complete()
-		return next_task
 
-	def _conflicts_with_existing(self, task):
-		"""Return whether the task overlaps an existing scheduled task."""
-		new_end = task.due_date + timedelta(minutes=task.duration_minutes)
-		for existing_task in self.tasks:
-			existing_end = existing_task.due_date + timedelta(
-				minutes=existing_task.duration_minutes
-			)
-			if task.due_date < existing_end and existing_task.due_date < new_end:
-				return True
-		return False
+        if not self.schedule_task(next_task):
+            raise ValueError(
+                f"Could not schedule the next occurrence of {task.title!r}: "
+                "it conflicts with another task."
+            )
+
+        task.complete()
+        return next_task
+
+    def _conflicts_with_existing(self, task):
+        """Return whether the task overlaps an existing scheduled task."""
+        new_end = task.due_date + timedelta(minutes=task.duration_minutes)
+        for existing_task in self.tasks:
+            existing_end = existing_task.due_date + timedelta(
+                minutes=existing_task.duration_minutes
+            )
+            if task.due_date < existing_end and existing_task.due_date < new_end:
+                return True
+        return False
