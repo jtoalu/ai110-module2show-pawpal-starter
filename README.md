@@ -117,6 +117,10 @@ Describe your app in numbered steps so a reader can follow along without watchin
 
 ![Dashboard for a pet care planning app with a daily schedule, recurring tasks, conflict warnings, and status sections for overdue, completed, and upcoming items. The primary subject is a task management interface arranged in a clean, organized layout with a calendar-like plan and labeled task cards. The app is showing recurring pet care activities, conflict indicators, and a list of completed and pending tasks. The wider environment is a professional desktop app interface with soft neutral colors and a structured layout designed for daily pet care tracking. Visible text includes labels for recurring tasks, overdue items, completed tasks, upcoming activities, and scheduling information. The emotional tone is practical, calm, and efficient, focused on helping a pet owner manage care responsibilities.](images/Screenshot%202026-10-02%20171814.png)
 
-6. <!-- Add more steps as needed -->
+6. Here is the UI of schedule conflict.
+
+![screenshot of schedule conflict](images/Screenshot%202026-10-03%20214448.png)
+
+7. <!-- Add more steps as needed -->
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
