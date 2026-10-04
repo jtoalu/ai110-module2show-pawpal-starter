@@ -1,0 +1,82 @@
+{
+  "pets": [
+    {
+      "pet_id": 1,
+      "name": "Mochi",
+      "species": "dog",
+      "breed": "Shiba Inu",
+      "age": 3,
+      "owner_id": 1
+    },
+    {
+      "pet_id": 2,
+      "name": "Mochi",
+      "species": "dog",
+      "breed": "Shiba Inu",
+      "age": 2,
+      "owner_id": 1
+    },
+    {
+      "pet_id": 3,
+      "name": "Paw Patrol",
+      "species": "dog",
+      "breed": "Shiba Inu",
+      "age": 10,
+      "owner_id": 1
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": 1,
+      "title": "Outdoor walk",
+      "description": "",
+      "due_date": "2026-10-04T07:56:00",
+      "priority": "high",
+      "duration_minutes": 20,
+      "completed": true,
+      "pet_id": 1,
+      "recurrence": null,
+      "completed_at": "2026-10-04T07:10:09.589992"
+    },
+    {
+      "task_id": 2,
+      "title": "Outdoor walk",
+      "description": "",
+      "due_date": "2026-10-05T08:03:00",
+      "priority": "high",
+      "duration_minutes": 20,
+      "completed": false,
+      "pet_id": 2,
+      "recurrence": null,
+      "completed_at": null
+    },
+    {
+      "task_id": 3,
+      "title": "Medical appointment",
+      "description": "",
+      "due_date": "2026-10-06T08:12:00",
+      "priority": "high",
+      "duration_minutes": 20,
+      "completed": false,
+      "pet_id": 3,
+      "recurrence": null,
+      "completed_at": null
+    }
+  ],
+  "scheduled_task_ids": [
+    1,
+    2,
+    3
+  ],
+  "pet_task_ids": {
+    "1": [
+      1
+    ],
+    "2": [
+      2
+    ],
+    "3": [
+      3
+    ]
+  }
+}
