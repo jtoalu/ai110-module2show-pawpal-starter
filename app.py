@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 from pawpal_system import Owner, Pet, Task, Scheduler
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
@@ -81,28 +81,109 @@ if "tasks" not in st.session_state:
 
 col1, col2, col3 = st.columns(3)
 with col1:
-    task_title = st.text_input("Task title", value="Morning walk")
+    task_title = st.text_input("Task title", value="Outdoor walk")
 with col2:
     duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
 with col3:
     priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
 
 due_date = st.date_input("Due date")
-due_time = st.time_input("Due time")
+due_time = st.time_input("Due time", value=datetime.now() + timedelta(hours=1))
 
 if st.button("Add task"):
     st.session_state.tasks.append(
-        {"title": task_title, 
-        "duration_minutes": int(duration), 
-        "priority": priority,
-        "due_date": datetime.combine(due_date, due_time)}
+        {
+            "title": task_title,
+            "duration_minutes": int(duration),
+            "priority": priority,
+            "due_date": datetime.combine(due_date, due_time),
+        }
     )
 
 if st.session_state.tasks:
-    st.write("Current tasks:")
-    st.table(st.session_state.tasks)
+    scheduler = Scheduler()
+
+    for task_id, task_data in enumerate(st.session_state.tasks, start=1):
+        task = Task(
+            task_id=task_id,
+            title=task_data["title"],
+            description="",
+            due_date=(
+                datetime.fromisoformat(task_data["due_date"])
+                if isinstance(task_data["due_date"], str)
+                else task_data["due_date"]
+            ),
+            priority=task_data["priority"],
+            duration_minutes=task_data["duration_minutes"],
+        )
+
+        if not scheduler.schedule_task(task):
+            task_end = task.due_date + timedelta(minutes=task.duration_minutes)
+            conflict = next(
+                (
+                    scheduled
+                    for scheduled in scheduler.tasks
+                    if not scheduled.completed
+                    and task.due_date
+                    < scheduled.due_date + timedelta(minutes=scheduled.duration_minutes)
+                    and scheduled.due_date < task_end
+                ),
+                None,
+            )
+
+            if conflict is not None:
+                overlap_start = max(task.due_date, conflict.due_date)
+                overlap_end = min(
+                    task_end,
+                    conflict.due_date + timedelta(minutes=conflict.duration_minutes),
+                )
+                st.warning(
+                    f"Could not schedule **{task.title}**: it overlaps with "
+                    f"**{conflict.title}** from {overlap_start:%b %d, %I:%M %p} "
+                    f"to {overlap_end:%I:%M %p}."
+                )
+            else:
+                st.warning(
+                    f"Could not schedule **{task.title}**. The scheduler rejected it, "
+                    f"but no overlapping scheduled task was found."
+                )
+
+    st.write("Upcoming tasks:")
+    upcoming_tasks = scheduler.get_upcoming_tasks()
+
+    if upcoming_tasks:
+        st.table(
+            [
+                {
+                    "Title": task.title,
+                    "Due Date": task.due_date,
+                    "Priority": task.priority,
+                    "Duration (minutes)": task.duration_minutes,
+                }
+                for task in upcoming_tasks
+            ]
+        )
+    else:
+        st.info("No upcoming tasks.")
 else:
     st.info("No tasks yet. Add one above.")
+
+open_tasks = [
+    task for task in st.session_state.tasks if not task.get("completed", False)
+]
+task_objects = [
+    Task(
+        task_id=i,
+        title=task["title"],
+        description="",
+        due_date=(datetime.fromisoformat(task["due_date"])
+            if isinstance(task["due_date"], str)
+            else task["due_date"]),
+        priority=task["priority"],
+        duration_minutes=task["duration_minutes"],
+    )
+    for i, task in enumerate(open_tasks)
+]
 
 st.divider()
 
@@ -145,12 +226,14 @@ if st.button("Generate schedule"):
     else:
         st.info("No tasks scheduled. Check for conflicts or add more tasks.")
 
-    st.markdown(
-        """
+st.divider()
+
+st.markdown(
+"""
 Suggested approach:
 1. Design your UML (draft).
 2. Create class stubs (no logic).
 3. Implement scheduling behavior.
 4. Connect your scheduler here and display results.
 """
-    )
+)
