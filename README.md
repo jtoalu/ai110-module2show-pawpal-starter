@@ -121,6 +121,14 @@ Describe your app in numbered steps so a reader can follow along without watchin
 
 ![screenshot of schedule conflict](images/Screenshot%202026-10-03%20214448.png)
 
-7. <!-- Add more steps as needed -->
+7. Here is the UI of Completed Tasks.
+
+![screenshot of completed tasks](images/Screenshot%202026-10-04%20071342.png)
+
+8. Here is the screenshot of data persisted into json.data file.
+
+![screenshot of persisted data](images/Screenshot%202026-10-04%20071402.png)
+
+9. <!-- Add more steps as needed -->
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
