@@ -96,3 +96,7 @@ In some occassions, I allow the AI to write codes or comments into a file. I the
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+I learned that being the lead architect means more than asking AI to write code. I am responsible for the system’s structure and for deciding whether its suggestions fit the project. Copilot helped me revisit ideas from my OOP course and spot design questions I needed to resolve — such as where tasks should live, how pets relate to owners, what information scheduling needs, and who should own task completion.
+
+I can let AI draft code or comments, but I remain accountable for reviewing them and choosing what to keep or undo. The key takeaway is to use AI as a powerful collaborator, not as the decision-maker. It can help generate ideas and surface issues, while I provide the judgment, verify the results, and guide the design.
